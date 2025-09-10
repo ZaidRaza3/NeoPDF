@@ -22,8 +22,8 @@ This tool is a simple yet powerful web application designed to handle common PDF
 
 1.  **Clone the repository:**
     ```bash
-    git clone [https://github.com/your-username/your-repo-name.git](https://github.com/your-username/your-repo-name.git)
-    cd your-repo-name
+    git clone https://github.com/ZaidRaza3/NeoPDF.git
+    cd NeoPDF
     ```
 
 2.  **Install Dependencies:**
