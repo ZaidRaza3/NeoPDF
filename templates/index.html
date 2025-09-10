@@ -564,340 +564,340 @@
     
     <script>
     // Use relative path for backend APIs (works both locally & Render)
-    const API_URL = "";
-
-    let organizeFile = null;
-    let pageOperations = [];
-
-    function showMessage(elementId, message, type) {
-        const element = document.getElementById(elementId);
-        element.textContent = message;
-        element.className = `status-message status-${type}`;
-        element.style.display = 'block';
-    }
-
-    function hideMessage(elementId) {
-        const element = document.getElementById(elementId);
-        if(element) element.style.display = 'none';
-    }
-
-    function setProgress(elementId, percentage) {
-        const progress = document.getElementById(elementId);
-        if(progress) progress.style.width = `${percentage}%`;
-    }
-
-    function showDownloadLink(elementId, blob, filename) {
-        const downloadSection = document.getElementById(elementId);
-        const downloadLink = downloadSection.querySelector('a');
-        const url = URL.createObjectURL(blob);
-        downloadLink.href = url;
-        downloadLink.download = filename;
-        downloadSection.style.display = 'block';
-    }
-
-    function hideDownloadLink(elementId) {
-        const downloadSection = document.getElementById(elementId);
-        if(downloadSection) downloadSection.style.display = 'none';
-    }
-
-    function formatBytes(bytes, decimals = 2) {
-        if (bytes === 0) return '0 Bytes';
-        const k = 1024;
-        const dm = decimals < 0 ? 0 : decimals;
-        const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
-        const i = Math.floor(Math.log(bytes) / Math.log(k));
-        return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
-    }
-
-    // Tabs setup
-    document.querySelectorAll('.tab').forEach(tab => {
-        tab.addEventListener('click', () => {
-            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-            document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
-            tab.classList.add('active');
-            document.getElementById(tab.dataset.target).classList.add('active');
-        });
-    });
-
-    // Drag-and-drop setup
-    document.querySelectorAll('.file-drop-area').forEach(dropArea => {
-        const fileInput = dropArea.querySelector('input[type="file"]');
-        const uploadBtn = dropArea.querySelector('.btn-upload');
-        
-        if (uploadBtn) {
-            uploadBtn.addEventListener('click', (e) => {
-                e.stopPropagation();
-                fileInput.click();
-            });
+        const API_URL = "";
+    
+        let organizeFile = null;
+        let pageOperations = [];
+    
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status-message status-${type}`;
+            element.style.display = 'block';
         }
-
-        dropArea.addEventListener('click', (e) => {
-            if (e.target !== uploadBtn) {
-                fileInput.click();
+    
+        function hideMessage(elementId) {
+            const element = document.getElementById(elementId);
+            if(element) element.style.display = 'none';
+        }
+    
+        function setProgress(elementId, percentage) {
+            const progress = document.getElementById(elementId);
+            if(progress) progress.style.width = `${percentage}%`;
+        }
+    
+        function showDownloadLink(elementId, blob, filename) {
+            const downloadSection = document.getElementById(elementId);
+            const downloadLink = downloadSection.querySelector('a');
+            const url = URL.createObjectURL(blob);
+            downloadLink.href = url;
+            downloadLink.download = filename;
+            downloadSection.style.display = 'block';
+        }
+    
+        function hideDownloadLink(elementId) {
+            const downloadSection = document.getElementById(elementId);
+            if(downloadSection) downloadSection.style.display = 'none';
+        }
+    
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+    
+        // Tabs setup
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.target).classList.add('active');
+            });
+        });
+    
+        // Drag-and-drop setup
+        document.querySelectorAll('.file-drop-area').forEach(dropArea => {
+            const fileInput = dropArea.querySelector('input[type="file"]');
+            const uploadBtn = dropArea.querySelector('.btn-upload');
+            
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    fileInput.click();
+                });
             }
+    
+            dropArea.addEventListener('click', (e) => {
+                if (e.target !== uploadBtn) {
+                    fileInput.click();
+                }
+            });
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('highlight');
+            });
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.classList.remove('highlight');
+            });
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('highlight');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            });
+    
+            fileInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                handleFiles(files, dropArea.closest('.content-panel').id);
+            });
         });
-        dropArea.addEventListener('dragover', (e) => {
-            e.preventDefault();
-            dropArea.classList.add('highlight');
-        });
-        dropArea.addEventListener('dragleave', () => {
-            dropArea.classList.remove('highlight');
-        });
-        dropArea.addEventListener('drop', (e) => {
-            e.preventDefault();
-            dropArea.classList.remove('highlight');
-            const files = e.dataTransfer.files;
-            if (files.length > 0) {
-                fileInput.files = files;
-                fileInput.dispatchEvent(new Event('change'));
+    
+        // -------------- PDF Operations ------------------
+    
+        // Merge
+        document.getElementById('merge-btn').addEventListener('click', async () => {
+            const files = document.getElementById('merge-file-input').files;
+            if (files.length < 2) {
+                showMessage('merge-status', 'Please select at least two PDF files.', 'error');
+                return;
             }
+    
+            hideDownloadLink('merge-download');
+            hideMessage('merge-status');
+            setProgress('merge-progress', 0);
+    
+            const formData = new FormData();
+            for (const file of files) {
+                formData.append('files', file);
+            }
+    
+            try {
+                showMessage('merge-status', 'Merging PDFs...', 'info');
+                const response = await fetch(`/merge`, {
+                    method: 'POST',
+                    body: formData,
+                });
+    
+                if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+    
+                const blob = await response.blob();
+                showDownloadLink('merge-download', blob, 'merged.pdf');
+                showMessage('merge-status', 'PDFs merged successfully!', 'success');
+            } catch (error) {
+                showMessage('merge-status', `Error: ${error.message}`, 'error');
+            }
+            setProgress('merge-progress', 100);
         });
-
-        fileInput.addEventListener('change', (e) => {
-            const files = e.target.files;
-            handleFiles(files, dropArea.closest('.content-panel').id);
+    
+        // Split
+        document.getElementById('split-btn').addEventListener('click', async () => {
+            const file = document.getElementById('split-file-input').files[0];
+            const pageRange = document.getElementById('page-range').value.trim();
+    
+            if (!file) {
+                showMessage('split-status', 'Please select a PDF file.', 'error');
+                return;
+            }
+    
+            hideDownloadLink('split-download');
+            hideMessage('split-status');
+            setProgress('split-progress', 0);
+    
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('pages', pageRange);
+    
+            try {
+                showMessage('split-status', 'Splitting PDF...', 'info');
+                const response = await fetch(`/split`, {
+                    method: 'POST',
+                    body: formData,
+                });
+    
+                if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+    
+                const blob = await response.blob();
+                showDownloadLink('split-download', blob, 'split.pdf');
+                showMessage('split-status', 'PDF split successfully!', 'success');
+            } catch (error) {
+                showMessage('split-status', `Error: ${error.message}`, 'error');
+            }
+            setProgress('split-progress', 100);
         });
-    });
-
-    // -------------- PDF Operations ------------------
-
-    // Merge
-    document.getElementById('merge-btn').addEventListener('click', async () => {
-        const files = document.getElementById('merge-file-input').files;
-        if (files.length < 2) {
-            showMessage('merge-status', 'Please select at least two PDF files.', 'error');
-            return;
-        }
-
-        hideDownloadLink('merge-download');
-        hideMessage('merge-status');
-        setProgress('merge-progress', 0);
-
-        const formData = new FormData();
-        for (const file of files) {
-            formData.append('files', file);
-        }
-
-        try {
-            showMessage('merge-status', 'Merging PDFs...', 'info');
-            const response = await fetch(`/merge`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) throw new Error(`Server responded with ${response.status}`);
-
-            const blob = await response.blob();
-            showDownloadLink('merge-download', blob, 'merged.pdf');
-            showMessage('merge-status', 'PDFs merged successfully!', 'success');
-        } catch (error) {
-            showMessage('merge-status', `Error: ${error.message}`, 'error');
-        }
-        setProgress('merge-progress', 100);
-    });
-
-    // Split
-    document.getElementById('split-btn').addEventListener('click', async () => {
-        const file = document.getElementById('split-file-input').files[0];
-        const pageRange = document.getElementById('page-range').value.trim();
-
-        if (!file) {
-            showMessage('split-status', 'Please select a PDF file.', 'error');
-            return;
-        }
-
-        hideDownloadLink('split-download');
-        hideMessage('split-status');
-        setProgress('split-progress', 0);
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('pages', pageRange);
-
-        try {
-            showMessage('split-status', 'Splitting PDF...', 'info');
-            const response = await fetch(`/split`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) throw new Error(`Server responded with ${response.status}`);
-
-            const blob = await response.blob();
-            showDownloadLink('split-download', blob, 'split.pdf');
-            showMessage('split-status', 'PDF split successfully!', 'success');
-        } catch (error) {
-            showMessage('split-status', `Error: ${error.message}`, 'error');
-        }
-        setProgress('split-progress', 100);
-    });
-
-    // Compress
-    document.getElementById('compress-btn').addEventListener('click', async () => {
-        const file = document.getElementById('compress-file-input').files[0];
-        if (!file) {
-            showMessage('compress-status', 'Please select a PDF file.', 'error');
-            return;
-        }
-
-        hideDownloadLink('compress-download');
-        hideMessage('compress-status');
-        setProgress('compress-progress', 0);
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            showMessage('compress-status', 'Compressing PDF...', 'info');
-            const response = await fetch(`/compress`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) throw new Error(`Server responded with ${response.status}`);
-
-            const blob = await response.blob();
-            showDownloadLink('compress-download', blob, 'compressed.pdf');
-            showMessage('compress-status', 'PDF compressed successfully!', 'success');
-        } catch (error) {
-            showMessage('compress-status', `Error: ${error.message}`, 'error');
-        }
-        setProgress('compress-progress', 100);
-    });
-
-    // Organize
-    document.getElementById('organize-btn').addEventListener('click', async () => {
-        const file = document.getElementById('organize-file-input').files[0];
-        if (!file) {
-            showMessage('organize-status', 'Please select a PDF file.', 'error');
-            return;
-        }
-
-        hideDownloadLink('organize-download');
-        hideMessage('organize-status');
-        setProgress('organize-progress', 0);
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            showMessage('organize-status', 'Organizing PDF...', 'info');
-            const response = await fetch(`/organize`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) throw new Error(`Server responded with ${response.status}`);
-
-            const blob = await response.blob();
-            showDownloadLink('organize-download', blob, 'organized.pdf');
-            showMessage('organize-status', 'PDF organized successfully!', 'success');
-        } catch (error) {
-            showMessage('organize-status', `Error: ${error.message}`, 'error');
-        }
-        setProgress('organize-progress', 100);
-    });
-
-    // Convert
-    document.getElementById('convert-btn').addEventListener('click', async () => {
-        const file = document.getElementById('convert-file-input').files[0];
-        if (!file) {
-            showMessage('convert-status', 'Please select a PDF file.', 'error');
-            return;
-        }
-
-        hideDownloadLink('convert-download');
-        hideMessage('convert-status');
-        setProgress('convert-progress', 0);
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            showMessage('convert-status', 'Converting PDF...', 'info');
-            const response = await fetch(`/convert`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) throw new Error(`Server responded with ${response.status}`);
-
-            const blob = await response.blob();
-            showDownloadLink('convert-download', blob, 'converted.docx');
-            showMessage('convert-status', 'PDF converted successfully!', 'success');
-        } catch (error) {
-            showMessage('convert-status', `Error: ${error.message}`, 'error');
-        }
-        setProgress('convert-progress', 100);
-    });
-
-    // Unlock
-    document.getElementById('unlock-btn').addEventListener('click', async () => {
-        const file = document.getElementById('unlock-file-input').files[0];
-        if (!file) {
-            showMessage('unlock-status', 'Please select a PDF file.', 'error');
-            return;
-        }
-
-        hideDownloadLink('unlock-download');
-        hideMessage('unlock-status');
-        setProgress('unlock-progress', 0);
-
-        const formData = new FormData();
-        formData.append('file', file);
-
-        try {
-            showMessage('unlock-status', 'Unlocking PDF...', 'info');
-            const response = await fetch(`/unlock`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) throw new Error(`Server responded with ${response.status}`);
-
-            const blob = await response.blob();
-            showDownloadLink('unlock-download', blob, 'unlocked.pdf');
-            showMessage('unlock-status', 'PDF unlocked successfully!', 'success');
-        } catch (error) {
-            showMessage('unlock-status', `Error: ${error.message}`, 'error');
-        }
-        setProgress('unlock-progress', 100);
-    });
-
-    // Protect
-    document.getElementById('protect-btn').addEventListener('click', async () => {
-        const file = document.getElementById('protect-file-input').files[0];
-        const password = document.getElementById('protect-password').value;
-        if (!file || !password) {
-            showMessage('protect-status', 'Please select a PDF and enter a password.', 'error');
-            return;
-        }
-
-        hideDownloadLink('protect-download');
-        hideMessage('protect-status');
-        setProgress('protect-progress', 0);
-
-        const formData = new FormData();
-        formData.append('file', file);
-        formData.append('password', password);
-
-        try {
-            showMessage('protect-status', 'Protecting PDF...', 'info');
-            const response = await fetch(`/protect`, {
-                method: 'POST',
-                body: formData,
-            });
-
-            if (!response.ok) throw new Error(`Server responded with ${response.status}`);
-
-            const blob = await response.blob();
-            showDownloadLink('protect-download', blob, 'protected.pdf');
-            showMessage('protect-status', 'PDF protected successfully!', 'success');
-        } catch (error) {
-            showMessage('protect-status', `Error: ${error.message}`, 'error');
-        }
-        setProgress('protect-progress', 100);
-    });
+    
+        // Compress
+        document.getElementById('compress-btn').addEventListener('click', async () => {
+            const file = document.getElementById('compress-file-input').files[0];
+            if (!file) {
+                showMessage('compress-status', 'Please select a PDF file.', 'error');
+                return;
+            }
+    
+            hideDownloadLink('compress-download');
+            hideMessage('compress-status');
+            setProgress('compress-progress', 0);
+    
+            const formData = new FormData();
+            formData.append('file', file);
+    
+            try {
+                showMessage('compress-status', 'Compressing PDF...', 'info');
+                const response = await fetch(`/compress`, {
+                    method: 'POST',
+                    body: formData,
+                });
+    
+                if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+    
+                const blob = await response.blob();
+                showDownloadLink('compress-download', blob, 'compressed.pdf');
+                showMessage('compress-status', 'PDF compressed successfully!', 'success');
+            } catch (error) {
+                showMessage('compress-status', `Error: ${error.message}`, 'error');
+            }
+            setProgress('compress-progress', 100);
+        });
+    
+        // Organize
+        document.getElementById('organize-btn').addEventListener('click', async () => {
+            const file = document.getElementById('organize-file-input').files[0];
+            if (!file) {
+                showMessage('organize-status', 'Please select a PDF file.', 'error');
+                return;
+            }
+    
+            hideDownloadLink('organize-download');
+            hideMessage('organize-status');
+            setProgress('organize-progress', 0);
+    
+            const formData = new FormData();
+            formData.append('file', file);
+    
+            try {
+                showMessage('organize-status', 'Organizing PDF...', 'info');
+                const response = await fetch(`/organize`, {
+                    method: 'POST',
+                    body: formData,
+                });
+    
+                if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+    
+                const blob = await response.blob();
+                showDownloadLink('organize-download', blob, 'organized.pdf');
+                showMessage('organize-status', 'PDF organized successfully!', 'success');
+            } catch (error) {
+                showMessage('organize-status', `Error: ${error.message}`, 'error');
+            }
+            setProgress('organize-progress', 100);
+        });
+    
+        // Convert
+        document.getElementById('convert-btn').addEventListener('click', async () => {
+            const file = document.getElementById('convert-file-input').files[0];
+            if (!file) {
+                showMessage('convert-status', 'Please select a PDF file.', 'error');
+                return;
+            }
+    
+            hideDownloadLink('convert-download');
+            hideMessage('convert-status');
+            setProgress('convert-progress', 0);
+    
+            const formData = new FormData();
+            formData.append('file', file);
+    
+            try {
+                showMessage('convert-status', 'Converting PDF...', 'info');
+                const response = await fetch(`/convert`, {
+                    method: 'POST',
+                    body: formData,
+                });
+    
+                if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+    
+                const blob = await response.blob();
+                showDownloadLink('convert-download', blob, 'converted.docx');
+                showMessage('convert-status', 'PDF converted successfully!', 'success');
+            } catch (error) {
+                showMessage('convert-status', `Error: ${error.message}`, 'error');
+            }
+            setProgress('convert-progress', 100);
+        });
+    
+        // Unlock
+        document.getElementById('unlock-btn').addEventListener('click', async () => {
+            const file = document.getElementById('unlock-file-input').files[0];
+            if (!file) {
+                showMessage('unlock-status', 'Please select a PDF file.', 'error');
+                return;
+            }
+    
+            hideDownloadLink('unlock-download');
+            hideMessage('unlock-status');
+            setProgress('unlock-progress', 0);
+    
+            const formData = new FormData();
+            formData.append('file', file);
+    
+            try {
+                showMessage('unlock-status', 'Unlocking PDF...', 'info');
+                const response = await fetch(`/unlock`, {
+                    method: 'POST',
+                    body: formData,
+                });
+    
+                if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+    
+                const blob = await response.blob();
+                showDownloadLink('unlock-download', blob, 'unlocked.pdf');
+                showMessage('unlock-status', 'PDF unlocked successfully!', 'success');
+            } catch (error) {
+                showMessage('unlock-status', `Error: ${error.message}`, 'error');
+            }
+            setProgress('unlock-progress', 100);
+        });
+    
+        // Protect
+        document.getElementById('protect-btn').addEventListener('click', async () => {
+            const file = document.getElementById('protect-file-input').files[0];
+            const password = document.getElementById('protect-password').value;
+            if (!file || !password) {
+                showMessage('protect-status', 'Please select a PDF and enter a password.', 'error');
+                return;
+            }
+    
+            hideDownloadLink('protect-download');
+            hideMessage('protect-status');
+            setProgress('protect-progress', 0);
+    
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('password', password);
+    
+            try {
+                showMessage('protect-status', 'Protecting PDF...', 'info');
+                const response = await fetch(`/protect`, {
+                    method: 'POST',
+                    body: formData,
+                });
+    
+                if (!response.ok) throw new Error(`Server responded with ${response.status}`);
+    
+                const blob = await response.blob();
+                showDownloadLink('protect-download', blob, 'protected.pdf');
+                showMessage('protect-status', 'PDF protected successfully!', 'success');
+            } catch (error) {
+                showMessage('protect-status', `Error: ${error.message}`, 'error');
+            }
+            setProgress('protect-progress', 100);
+        });
 
     </script>
 </body>
