@@ -15,8 +15,8 @@ This tool is a simple yet powerful web application designed to handle common PDF
 - Convert Files: Transform your PDF to other formats like JPG or Word, and vice-versa.
 
 ### Technology Stack
-* 1.Frontend: HTML, CSS, JavaScript
-* 2.Backend: Python with the Flask framework
+* Frontend: HTML, CSS, JavaScript
+* Backend: Python with the Flask framework
 
 ### 🚀 Installation and Setup
 
@@ -49,5 +49,5 @@ This tool is a simple yet powerful web application designed to handle common PDF
 
 ### Upcoming Features
 I am actively developing NeoPDF and have plans to add more functionality soon, including:
-  Support for more file types in the conversion tool.
-  Advanced PDF editing features like adding text, images, and signatures.
+  * Support for more file types in the conversion tool.
+  * Advanced PDF editing features like adding text, images, and signatures.
