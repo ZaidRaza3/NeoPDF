@@ -1,1 +1,1113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NeoPDF</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf-lib/1.17.1/pdf-lib.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.min.js"></script>
+    <style>
+        :root {
+            --primary: #66028d;
+            --secondary: #5f0a86;
+            --accent: #48cae4;
+            --light: #0e1013da;
+            --dark: #66028d;
+            --success: #4cc9f0;
+            --warning: #f72585;
+            --border-radius: 8px;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #0b0c10;
+            color: var(--dark);
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--light);
+            border-radius: 12px;
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 25px;
+            text-align: center;
+        }
+        
+        h1 {
+            font-size: 2.2rem;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .privacy-notice {
+            background-color: rgba(0, 119, 182, 0.1);
+            border-left: 4px solid var(--primary);
+            padding: 15px;
+            margin: 20px;
+            border-radius: var(--border-radius);
+            color: var(--dark);
+        }
+        
+        .tabs {
+            display: flex;
+            background: #252a32;
+            padding: 0 20px;
+            border-bottom: 1px solid #333;
+            overflow-x: auto;
+        }
+        
+        .tab {
+            padding: 15px 25px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.3s;
+            border-bottom: 3px solid transparent;
+            color: #ccc;
+            white-space: nowrap;
+        }
+        
+        .tab.active {
+            border-bottom: 3px solid var(--primary);
+            color: var(--primary);
+            background: var(--light);
+        }
+        
+        .tab-content {
+            padding: 25px;
+        }
+        
+        .content-panel {
+            display: none;
+        }
+        
+        .content-panel.active {
+            display: block;
+        }
+        
+        .file-drop-area {
+            border: 2px dashed #555;
+            border-radius: var(--border-radius);
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 25px;
+            transition: border-color 0.3s, background 0.3s;
+            background: #2b2f38;
+            color: #ffff;
+        }
+        
+        .file-drop-area.highlight {
+            border-color: var(--primary);
+            background: #3c424d;
+        }
+        
+        .btn {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: var(--border-radius);
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            margin: 5px;
+            display: inline-block;
+        }
+        
+        .btn:hover {
+            background-color: var(--secondary);
+        }
+        
+        .btn-upload {
+            background-color: #66028d;
+            color: #ffff;
+            margin: 10px auto 0;
+        }
 
+        .btn-upload:hover {
+            background-color: #444;
+        }
+        
+        .btn-success {
+            background-color: var(--success);
+            color: var(--light);
+        }
+        
+        .btn-warning {
+            background-color: var(--warning);
+        }
+        
+        input[type="file"] {
+            display: none;
+        }
+        
+        input[type="text"], input[type="password"], select {
+            background-color: #333;
+            border: 1px solid #555;
+            color: var(--dark);
+            padding: 10px;
+            border-radius: var(--border-radius);
+            margin: 5px 0;
+            width: 100%;
+            max-width: 300px;
+            box-sizing: border-box;
+        }
+        
+        .progress-container {
+            margin: 20px 0;
+            background-color: #333;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 10px;
+            background-color: transparent;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+        
+        .progress {
+            height: 100%;
+            background-color: var(--success);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        
+        .download-section {
+            text-align: center;
+            margin-top: 25px;
+            padding: 15px;
+            background: rgba(76, 201, 240, 0.1);
+            border-radius: var(--border-radius);
+            display: none;
+        }
+        
+        .page-previews-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+        
+        .page-preview {
+            border: 1px solid #444;
+            border-radius: var(--border-radius);
+            padding: 10px;
+            text-align: center;
+            background: #2b2f38;
+            transition: all 0.3s;
+            color: #ccc;
+        }
+        
+        .page-preview.dragging {
+            opacity: 0.5;
+            border: 2px dashed var(--primary);
+        }
+
+        .page-preview img {
+            max-width: 100%;
+            height: auto;
+            margin-bottom: 10px;
+            border: 1px solid #333;
+            transition: transform 0.3s;
+        }
+        
+        .page-controls {
+            display: flex;
+            justify-content: center;
+            gap: 5px;
+            flex-wrap: wrap;
+        }
+        
+        .status-message {
+            padding: 12px;
+            margin: 15px 0;
+            border-radius: var(--border-radius);
+            text-align: center;
+        }
+        
+        .status-success {
+            background-color: rgba(76, 201, 240, 0.2);
+            color: var(--success);
+            border: 1px solid var(--success);
+        }
+        
+        .status-error {
+            background-color: rgba(247, 37, 133, 0.2);
+            color: var(--warning);
+            border: 1px solid var(--warning);
+        }
+
+        .status-info {
+            background-color: rgba(0, 119, 182, 0.2);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+        }
+        
+        .compression-info {
+            display: flex;
+            justify-content: space-between;
+            margin: 20px 0;
+            padding: 15px;
+            background: #252a32;
+            border-radius: var(--border-radius);
+        }
+        
+        .compression-info div {
+            text-align: center;
+            flex: 1;
+        }
+        
+        .compression-info .value {
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        
+        .note-info {
+            background: #333;
+            border-left: 4px solid #f72585;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: var(--border-radius);
+            color: #ccc;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #6c757d;
+            font-size: 0.9rem;
+            background: #15181e;
+            border-top: 1px solid #222;
+        }
+        
+        @media (max-width: 768px) {
+            .tabs {
+                flex-direction: column;
+            }
+            
+            .tab {
+                padding: 12px;
+                border-bottom: 1px solid #333;
+            }
+            
+            .page-controls {
+                flex-direction: column;
+            }
+            
+            .compression-info {
+                flex-direction: column;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>NeoPDF</h1>
+            <p class="subtitle">A modern way of handling PDFs.</p>
+        </header>
+        
+        <div class="tabs">
+            <div class="tab active" data-target="organize">Organize PDF</div>
+            <div class="tab" data-target="compress">Compress PDF</div>
+            <div class="tab" data-target="merge">Merge PDFs</div>
+            <div class="tab" data-target="split">Split PDF</div>
+            <div class="tab" data-target="convert">Convert Files</div>
+            <div class="tab" data-target="unlock">Unlock PDF</div>
+            <div class="tab" data-target="protect">Protect PDF</div>
+        </div>
+        
+        <div class="tab-content">
+            <div id="organize" class="content-panel active">
+                <h2>Organize PDF</h2>
+                <div class="file-drop-area" id="organize-drop-area">
+                    <p>Drag & drop a PDF file here or</p>
+                    <button class="btn btn-upload">Browse Files</button>
+                    <input type="file" id="organize-file-input" accept=".pdf">
+                    <p><small>Maximum file size: 50MB</small></p>
+                </div>
+                <div id="organize-options" style="display: none;">
+                    <h3>Page Preview (Drag & Drop to Rearrange)</h3>
+                    <div class="note-info">
+                        <strong>Note:</strong> Drag and drop page previews to reorder them. Use the buttons below each page to rotate or delete it.
+                    </div>
+                    <div id="page-previews" class="page-previews-container"></div>
+                    <div style="margin-top: 20px;">
+                        <button class="btn btn-success" id="save-organization-btn">Save Changes</button>
+                        <button class="btn" id="reset-organization-btn">Reset</button>
+                    </div>
+                </div>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="organize-progress"></div>
+                    </div>
+                </div>
+                <div id="organize-status" class="status-message"></div>
+                <div class="download-section" id="organize-download">
+                    <a href="#" class="btn" id="organize-download-link">Download Organized PDF</a>
+                </div>
+            </div>
+            
+            <div id="compress" class="content-panel">
+                <h2>Compress PDF</h2>
+                <div class="file-drop-area" id="compress-drop-area">
+                    <p>Drag & drop a PDF file here or</p>
+                    <button class="btn btn-upload">Browse Files</button>
+                    <input type="file" id="compress-file-input" accept=".pdf">
+                    <p><small>Maximum file size: 50MB</small></p>
+                </div>
+                
+                <div id="file-info" style="display: none; margin: 20px 0;">
+                    <h3>File Information</h3>
+                    <p>Name: <span id="file-name"></span></p>
+                    <p>Size: <span id="file-size"></span></p>
+                    <p>Pages: <span id="file-pages"></span></p>
+                </div>
+                
+                <div style="margin: 20px 0;">
+                    <label for="compression-level"><strong>Compression Level:</strong></label>
+                    <select id="compression-level" class="btn">
+                        <option value="low">Low (Better Quality, Less Compression)</option>
+                        <option value="medium" selected>Medium (Recommended)</option>
+                        <option value="high">High (Smaller Size, Lower Quality)</option>
+                    </select>
+                </div>
+                
+                <div class="note-info">
+                    <strong>Note:</strong> Compression results may vary depending on the original file.This tool works best on large PDFs with many images or embedded fonts.Some files won’t shrink much. This feature is still being improved.
+                </div>
+                
+                <button class="btn" id="compress-btn">Compress PDF</button>
+                
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="compress-progress"></div>
+                    </div>
+                </div>
+                
+                <div id="compression-results" style="display: none;">
+                    <h3>Compression Results</h3>
+                    <div class="compression-info">
+                        <div>
+                            <p>Original Size</p>
+                            <p class="value" id="original-size">0 MB</p>
+                        </div>
+                        <div>
+                            <p>Compressed Size</p>
+                            <p class="value" id="compressed-size">0 MB</p>
+                        </div>
+                        <div>
+                            <p>Reduction</p>
+                            <p class="value" id="reduction">0%</p>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="compress-status" class="status-message"></div>
+                <div class="download-section" id="compress-download">
+                    <a href="#" class="btn" id="compress-download-link">Download Compressed PDF</a>
+                </div>
+            </div>
+            
+            <div id="merge" class="content-panel">
+                <h2>Merge PDFs</h2>
+                <p>Select multiple PDF files to merge into a single document.</p>
+                <div class="file-drop-area" id="merge-drop-area">
+                    <p>Drag & drop PDF files here or</p>
+                    <button class="btn btn-upload">Browse Files</button>
+                    <input type="file" id="merge-file-input" accept=".pdf" multiple>
+                    <p>Selected files: <span id="merge-file-count">0</span></p>
+                </div>
+                <button class="btn" id="merge-btn">Merge PDFs</button>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="merge-progress"></div>
+                    </div>
+                </div>
+                <div id="merge-status" class="status-message"></div>
+                <div class="download-section" id="merge-download">
+                    <a href="#" class="btn" id="merge-download-link">Download Merged PDF</a>
+                </div>
+            </div>
+            
+            <div id="split" class="content-panel">
+                <h2>Split PDF</h2>
+                <div class="file-drop-area" id="split-drop-area">
+                    <p>Drag & drop a PDF file here or</p>
+                    <button class="btn btn-upload">Browse Files</button>
+                    <input type="file" id="split-file-input" accept=".pdf">
+                </div>
+                <div style="margin: 20px 0;">
+                    <label for="split-pages1"><strong>Pages for first PDF (e.g. 1,3,5 or 2-4):</strong></label>
+                    <input type="text" id="split-pages1" class="btn" placeholder="e.g. 1,3,5 or 2-4">
+                </div>
+                <div style="margin: 20px 0;">
+                    <label for="split-pages2"><strong>Pages for second PDF (e.g. 6,7 or 8-10):</strong></label>
+                    <input type="text" id="split-pages2" class="btn" placeholder="e.g. 6,7 or 8-10">
+                </div>
+                <button class="btn" id="split-btn">Split PDF</button>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="split-progress"></div>
+                    </div>
+                </div>
+                <div id="split-status" class="status-message"></div>
+                <div class="download-section" id="split-download">
+                    <a href="#" class="btn" id="split-download-link">Download Split PDFs (ZIP)</a>
+                </div>
+            </div>
+
+            <div id="convert" class="content-panel">
+                <h2>Convert Files</h2>
+                <div class="file-drop-area" id="convert-drop-area">
+                    <p>Drag & drop your file here or</p>
+                    <button class="btn btn-upload">Browse Files</button>
+                    <input type="file" id="convert-file-input" accept=".pdf,.docx">
+                </div>
+                <div style="margin: 20px 0;">
+                    <label for="conversion-type"><strong>Conversion Type:</strong></label>
+                    <select id="conversion-type" class="btn">
+                        <option value="pdf-to-docx">PDF to Word (.docx)</option>
+                        <option value="word-to-pdf">Word (.docx) to PDF</option>
+                    </select>
+                </div>
+                <div class="note-info">
+                    <strong>Note for PDF to Word:</strong> This conversion works best for text-based PDFs. Scanned documents or image-heavy PDFs may not convert correctly.
+                </div>
+                <button class="btn" id="convert-btn">Convert</button>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="convert-progress"></div>
+                    </div>
+                </div>
+                <div id="convert-status" class="status-message"></div>
+                <div class="download-section" id="convert-download">
+                    <a href="#" class="btn" id="convert-download-link">Download Converted File</a>
+                </div>
+            </div>
+
+            <div id="unlock" class="content-panel">
+                <h2>Unlock PDF</h2>
+                <div class="file-drop-area" id="unlock-drop-area">
+                    <p>Drag & drop a PDF file here or</p>
+                    <button class="btn btn-upload">Browse Files</button>
+                    <input type="file" id="unlock-file-input" accept=".pdf">
+                </div>
+                <div style="margin: 20px 0;">
+                    <label for="unlock-password"><strong>Password:</strong></label>
+                    <input type="password" id="unlock-password" class="btn" placeholder="Enter password">
+                </div>
+                <button class="btn" id="unlock-btn">Unlock PDF</button>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="unlock-progress"></div>
+                    </div>
+                </div>
+                <div id="unlock-status" class="status-message"></div>
+                <div class="download-section" id="unlock-download">
+                    <a href="#" class="btn" id="unlock-download-link">Download Unlocked PDF</a>
+                </div>
+            </div>
+
+            <div id="protect" class="content-panel">
+                <h2>Protect PDF</h2>
+                <div class="file-drop-area" id="protect-drop-area">
+                    <p>Drag & drop a PDF file here or</p>
+                    <button class="btn btn-upload">Browse Files</button>
+                    <input type="file" id="protect-file-input" accept=".pdf">
+                </div>
+                <div style="margin: 20px 0;">
+                    <label for="protect-password"><strong>Password:</strong></label>
+                    <input type="password" id="protect-password" class="btn" placeholder="Enter password">
+                </div>
+                <button class="btn" id="protect-btn">Protect PDF</button>
+                <div class="progress-container">
+                    <div class="progress-bar">
+                        <div class="progress" id="protect-progress"></div>
+                    </div>
+                </div>
+                <div id="protect-status" class="status-message"></div>
+                <div class="download-section" id="protect-download">
+                    <a href="#" class="btn" id="protect-download-link">Download Protected PDF</a>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <footer>
+        <strong>Privacy Guarantee:</strong> Your files are never stored. All processing happens on a temporary server process and files are deleted immediately after the task is completed.
+    <p>&copy; 2024 PDF Wizard. All rights reserved.</p>
+    </footer>
+    
+    <script>
+        const API_URL = "http://127.0.0.1:5000";
+
+        let organizeFile = null;
+        let pageOperations = [];
+
+        function showMessage(elementId, message, type) {
+            const element = document.getElementById(elementId);
+            element.textContent = message;
+            element.className = `status-message status-${type}`;
+            element.style.display = 'block';
+        }
+
+        function hideMessage(elementId) {
+            const element = document.getElementById(elementId);
+            if(element) element.style.display = 'none';
+        }
+
+        function setProgress(elementId, percentage) {
+            const progress = document.getElementById(elementId);
+            if(progress) progress.style.width = `${percentage}%`;
+        }
+
+        function showDownloadLink(elementId, blob, filename) {
+            const downloadSection = document.getElementById(elementId);
+            const downloadLink = downloadSection.querySelector('a');
+            const url = URL.createObjectURL(blob);
+            downloadLink.href = url;
+            downloadLink.download = filename;
+            downloadSection.style.display = 'block';
+        }
+
+        function hideDownloadLink(elementId) {
+            const downloadSection = document.getElementById(elementId);
+            if(downloadSection) downloadSection.style.display = 'none';
+        }
+
+        function formatBytes(bytes, decimals = 2) {
+            if (bytes === 0) return '0 Bytes';
+            const k = 1024;
+            const dm = decimals < 0 ? 0 : decimals;
+            const sizes = ['Bytes', 'KB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+            const i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(dm)) + ' ' + sizes[i];
+        }
+
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.content-panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById(tab.dataset.target).classList.add('active');
+            });
+        });
+
+        document.querySelectorAll('.file-drop-area').forEach(dropArea => {
+            const fileInput = dropArea.querySelector('input[type="file"]');
+            const uploadBtn = dropArea.querySelector('.btn-upload');
+            
+            if (uploadBtn) {
+                uploadBtn.addEventListener('click', (e) => {
+                    e.stopPropagation(); // Prevents drop area from also triggering
+                    fileInput.click();
+                });
+            }
+
+            dropArea.addEventListener('click', (e) => {
+                 if (e.target !== uploadBtn) {
+                    fileInput.click();
+                 }
+            });
+            dropArea.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                dropArea.classList.add('highlight');
+            });
+            dropArea.addEventListener('dragleave', () => {
+                dropArea.classList.remove('highlight');
+            });
+            dropArea.addEventListener('drop', (e) => {
+                e.preventDefault();
+                dropArea.classList.remove('highlight');
+                const files = e.dataTransfer.files;
+                if (files.length > 0) {
+                    fileInput.files = files;
+                    fileInput.dispatchEvent(new Event('change'));
+                }
+            });
+
+            fileInput.addEventListener('change', (e) => {
+                const files = e.target.files;
+                handleFiles(files, dropArea.closest('.content-panel').id);
+            });
+        });
+
+        function handleFiles(files, panelId) {
+            hideDownloadLink(`${panelId}-download`);
+            hideMessage(`${panelId}-status`);
+            setProgress(`${panelId}-progress`, 0);
+
+            if (panelId === 'merge') {
+                document.getElementById('merge-file-count').textContent = files.length;
+            } else if (panelId === 'organize' && files.length > 0) {
+                organizeFile = files[0];
+                renderOrganize(organizeFile);
+            } else if (panelId === 'compress' && files.length > 0) {
+                const file = files[0];
+                document.getElementById('file-info').style.display = 'block';
+                document.getElementById('file-name').textContent = file.name;
+                document.getElementById('file-size').textContent = formatBytes(file.size);
+                
+                const fileReader = new FileReader();
+                fileReader.onload = async () => {
+                    try {
+                        const pdfDoc = await PDFLib.PDFDocument.load(fileReader.result);
+                        document.getElementById('file-pages').textContent = pdfDoc.getPages().length;
+                    } catch (e) {
+                        document.getElementById('file-pages').textContent = 'N/A';
+                    }
+                };
+                fileReader.readAsArrayBuffer(file);
+
+                document.getElementById('compression-results').style.display = 'none';
+            }
+        }
+
+        async function renderOrganize(file) {
+            const container = document.getElementById('page-previews');
+            container.innerHTML = '';
+            pageOperations = [];
+            document.getElementById('organize-options').style.display = 'block';
+
+            const reader = new FileReader();
+            reader.onload = async () => {
+                const pdfBytes = reader.result;
+                const pdfjsLib = window['pdfjs-dist/build/pdf'];
+                pdfjsLib.GlobalWorkerOptions.workerSrc = `https://cdnjs.cloudflare.com/ajax/libs/pdf.js/2.12.313/pdf.worker.min.js`;
+                const loadingTask = pdfjsLib.getDocument({ data: pdfBytes });
+                const pdf = await loadingTask.promise;
+                
+                const originalPageCount = pdf.numPages;
+
+                for (let i = 0; i < originalPageCount; i++) {
+                    const page = await pdf.getPage(i + 1);
+                    const initialAngle = page.rotate || 0;
+
+                    pageOperations.push({ originalIndex: i, page: i + 1, action: 'keep', angle: initialAngle });
+
+                    const previewDiv = document.createElement('div');
+                    previewDiv.className = 'page-preview';
+                    previewDiv.draggable = true;
+                    previewDiv.dataset.originalIndex = i;
+
+                    const pageNum = document.createElement('p');
+                    pageNum.textContent = `Page ${i + 1}`;
+                    previewDiv.appendChild(pageNum);
+
+                    const img = document.createElement('img');
+                    img.src = await renderPageAsImage(page);
+                    img.style.transform = `rotate(${initialAngle}deg)`;
+                    previewDiv.appendChild(img);
+
+                    const controls = document.createElement('div');
+                    controls.className = 'page-controls';
+
+                    const rotateBtn = document.createElement('button');
+                    rotateBtn.textContent = 'Rotate';
+                    rotateBtn.className = 'btn';
+                    rotateBtn.addEventListener('click', () => {
+                        const op = pageOperations.find(p => p.originalIndex === i);
+                        op.angle = (op.angle + 90) % 360;
+                        img.style.transform = `rotate(${op.angle}deg)`;
+                    });
+                    controls.appendChild(rotateBtn);
+
+                    const deleteBtn = document.createElement('button');
+                    deleteBtn.textContent = 'Delete';
+                    deleteBtn.className = 'btn btn-warning';
+                    deleteBtn.addEventListener('click', () => {
+                        const op = pageOperations.find(p => p.originalIndex === i);
+                        op.action = 'delete';
+                        previewDiv.style.display = 'none';
+                    });
+                    controls.appendChild(deleteBtn);
+                    
+                    previewDiv.appendChild(controls);
+                    container.appendChild(previewDiv);
+                }
+
+                let dragSrcEl = null;
+                container.addEventListener('dragstart', (e) => {
+                    e.target.classList.add('dragging');
+                    dragSrcEl = e.target;
+                    e.dataTransfer.effectAllowed = 'move';
+                });
+
+                container.addEventListener('dragover', (e) => {
+                    e.preventDefault();
+                    e.dataTransfer.dropEffect = 'move';
+                    const target = e.target.closest('.page-preview');
+                    if (target && target !== dragSrcEl) {
+                        const containerRect = container.getBoundingClientRect();
+                        const targetRect = target.getBoundingClientRect();
+                        const offset = e.clientY - targetRect.top;
+                        const middle = targetRect.height / 2;
+                        if (offset < middle) {
+                            container.insertBefore(dragSrcEl, target);
+                        } else {
+                            container.insertBefore(dragSrcEl, target.nextSibling);
+                        }
+                    }
+                });
+
+                container.addEventListener('dragend', (e) => {
+                    e.target.classList.remove('dragging');
+                    const newOrder = Array.from(container.children).map(el => parseInt(el.dataset.originalIndex));
+                    
+                    const newPageOperations = newOrder.map(originalIndex => 
+                        pageOperations.find(op => op.originalIndex === originalIndex)
+                    );
+                    pageOperations = newPageOperations;
+                });
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        
+        async function renderPageAsImage(page) {
+            const viewport = page.getViewport({ scale: 0.5, rotation: 0 });
+            const canvas = document.createElement('canvas');
+            const context = canvas.getContext('2d');
+            canvas.height = viewport.height;
+            canvas.width = viewport.width;
+            await page.render({ canvasContext: context, viewport: viewport }).promise;
+            return canvas.toDataURL();
+        }
+
+        document.getElementById('save-organization-btn').addEventListener('click', async () => {
+            if (!organizeFile) {
+                showMessage('organize-status', 'Please select a file first.', 'error');
+                return;
+            }
+
+            hideDownloadLink('organize-download');
+            hideMessage('organize-status');
+            setProgress('organize-progress', 0);
+            
+            const formData = new FormData();
+            formData.append('file', organizeFile);
+            
+            const orderedOps = Array.from(document.querySelectorAll('.page-preview')).map((preview, index) => {
+                const originalIndex = parseInt(preview.dataset.originalIndex);
+                const op = pageOperations.find(p => p.originalIndex === originalIndex);
+                return { ...op, page: index + 1 };
+            });
+
+            formData.append('ops', JSON.stringify(orderedOps));
+
+            try {
+                showMessage('organize-status', 'Saving changes...', 'info');
+                const response = await fetch(`${API_URL}/organize`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server responded with status ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                showDownloadLink('organize-download', blob, 'organized.pdf');
+                showMessage('organize-status', 'PDF organized successfully!', 'success');
+            } catch (error) {
+                showMessage('organize-status', `Error: ${error.message}. Please try again.`, 'error');
+            }
+            setProgress('organize-progress', 100);
+        });
+
+        document.getElementById('reset-organization-btn').addEventListener('click', () => {
+            if (organizeFile) {
+                renderOrganize(organizeFile);
+                hideDownloadLink('organize-download');
+                hideMessage('organize-status');
+                setProgress('organize-progress', 0);
+            }
+        });
+
+        document.getElementById('compress-btn').addEventListener('click', async () => {
+            const fileInput = document.getElementById('compress-file-input');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                showMessage('compress-status', 'Please select a PDF file first.', 'error');
+                return;
+            }
+            
+            hideDownloadLink('compress-download');
+            hideMessage('compress-status');
+            setProgress('compress-progress', 0);
+
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                showMessage('compress-status', 'Processing...', 'info');
+                const response = await fetch(`${API_URL}/compress`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server responded with status ${response.status}`);
+                }
+                
+                const originalSize = file.size;
+                const blob = await response.blob();
+                const compressedSize = blob.size;
+                
+                if (compressedSize >= originalSize) {
+                    showMessage('compress-status', 'Compression not effective. The file is likely already optimized.', 'warning');
+                    document.getElementById('compression-results').style.display = 'flex';
+                    document.getElementById('original-size').textContent = formatBytes(originalSize);
+                    document.getElementById('compressed-size').textContent = formatBytes(originalSize);
+                    document.getElementById('reduction').textContent = '0%';
+                } else {
+                    const reduction = ((originalSize - compressedSize) / originalSize) * 100;
+                    document.getElementById('original-size').textContent = formatBytes(originalSize);
+                    document.getElementById('compressed-size').textContent = formatBytes(compressedSize);
+                    document.getElementById('reduction').textContent = `${reduction.toFixed(1)}%`;
+                    document.getElementById('compression-results').style.display = 'flex';
+                    showMessage('compress-status', `Compression successful! File size reduced by ${reduction.toFixed(1)}%.`, 'success');
+                }
+                showDownloadLink('compress-download', blob, 'compressed.pdf');
+
+            } catch (error) {
+                showMessage('compress-status', `Error: ${error.message}. Please try again.`, 'error');
+            } finally {
+                setProgress('compress-progress', 100);
+            }
+        });
+
+        document.getElementById('merge-btn').addEventListener('click', async () => {
+            const files = document.getElementById('merge-file-input').files;
+            if (files.length < 2) {
+                showMessage('merge-status', 'Please select at least two PDF files.', 'error');
+                return;
+            }
+            hideDownloadLink('merge-download');
+            hideMessage('merge-status');
+            setProgress('merge-progress', 0);
+            
+            const formData = new FormData();
+            for (const file of files) {
+                formData.append('files', file);
+            }
+            
+            try {
+                showMessage('merge-status', 'Merging PDFs...', 'info');
+                const response = await fetch(`${API_URL}/merge`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server responded with status ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                showDownloadLink('merge-download', blob, 'merged.pdf');
+                showMessage('merge-status', 'PDFs merged successfully!', 'success');
+            } catch (error) {
+                showMessage('merge-status', `Error: ${error.message}. Please try again.`, 'error');
+            }
+            setProgress('merge-progress', 100);
+        });
+
+        document.getElementById('split-btn').addEventListener('click', async () => {
+            const file = document.getElementById('split-file-input').files[0];
+            const pages1 = document.getElementById('split-pages1').value;
+            const pages2 = document.getElementById('split-pages2').value;
+
+            if (!file || !pages1 || !pages2) {
+                showMessage('split-status', 'Please select a file and enter both sets of pages.', 'error');
+                return;
+            }
+
+            hideDownloadLink('split-download');
+            hideMessage('split-status');
+            setProgress('split-progress', 0);
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('pages1', pages1);
+            formData.append('pages2', pages2);
+            
+            try {
+                showMessage('split-status', 'Splitting PDF...', 'info');
+                const response = await fetch(`${API_URL}/split`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server responded with status ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                showDownloadLink('split-download', blob, 'split_parts.zip');
+                showMessage('split-status', 'PDF split successfully!', 'success');
+            } catch (error) {
+                showMessage('split-status', `Error: ${error.message}. Please try again.`, 'error');
+            }
+            setProgress('split-progress', 100);
+        });
+
+        document.getElementById('convert-btn').addEventListener('click', async () => {
+            const file = document.getElementById('convert-file-input').files[0];
+            const type = document.getElementById('conversion-type').value;
+
+            if (!file) {
+                showMessage('convert-status', 'Please select a file.', 'error');
+                return;
+            }
+
+            hideDownloadLink('convert-download');
+            hideMessage('convert-status');
+            setProgress('convert-progress', 0);
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('type', type);
+
+            let downloadName = '';
+            if (type === 'pdf-to-docx') {
+                downloadName = 'converted.docx';
+            } else if (type === 'word-to-pdf') {
+                downloadName = 'converted.pdf';
+            }
+
+            try {
+                showMessage('convert-status', 'Converting file...', 'info');
+                const response = await fetch(`${API_URL}/convert`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server responded with status ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                showDownloadLink('convert-download', blob, downloadName);
+                showMessage('convert-status', 'File converted successfully!', 'success');
+            } catch (error) {
+                showMessage('convert-status', `Error: ${error.message}. Please try again.`, 'error');
+            }
+            setProgress('convert-progress', 100);
+        });
+
+        document.getElementById('unlock-btn').addEventListener('click', async () => {
+            const file = document.getElementById('unlock-file-input').files[0];
+            const password = document.getElementById('unlock-password').value;
+
+            if (!file) {
+                showMessage('unlock-status', 'Please select a PDF file.', 'error');
+                return;
+            }
+            if (!password) {
+                showMessage('unlock-status', 'Please enter a password.', 'error');
+                return;
+            }
+
+            hideDownloadLink('unlock-download');
+            hideMessage('unlock-status');
+            setProgress('unlock-progress', 0);
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('password', password);
+            
+            try {
+                showMessage('unlock-status', 'Unlocking PDF...', 'info');
+                const response = await fetch(`${API_URL}/unlock`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server responded with status ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                showDownloadLink('unlock-download', blob, 'unlocked.pdf');
+                showMessage('unlock-status', 'PDF unlocked successfully!', 'success');
+            } catch (error) {
+                showMessage('unlock-status', `Error: ${error.message}. Please try again.`, 'error');
+            }
+            setProgress('unlock-progress', 100);
+        });
+
+        document.getElementById('protect-btn').addEventListener('click', async () => {
+            const file = document.getElementById('protect-file-input').files[0];
+            const password = document.getElementById('protect-password').value;
+
+            if (!file) {
+                showMessage('protect-status', 'Please select a PDF file.', 'error');
+                return;
+            }
+            if (!password) {
+                showMessage('protect-status', 'Please enter a password.', 'error');
+                return;
+            }
+
+            hideDownloadLink('protect-download');
+            hideMessage('protect-status');
+            setProgress('protect-progress', 0);
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('password', password);
+            
+            try {
+                showMessage('protect-status', 'Protecting PDF...', 'info');
+                const response = await fetch(`${API_URL}/protect`, {
+                    method: 'POST',
+                    body: formData,
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || `Server responded with status ${response.status}`);
+                }
+                
+                const blob = await response.blob();
+                showDownloadLink('protect-download', blob, 'protected.pdf');
+                showMessage('protect-status', 'PDF protected successfully!', 'success');
+            } catch (error) {
+                showMessage('protect-status', `Error: ${error.message}. Please try again.`, 'error');
+            }
+            setProgress('protect-progress', 100);
+        });
+
+    </script>
+</body>
+</html>
