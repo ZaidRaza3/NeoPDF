@@ -1,4 +1,4 @@
-from flask import Flask, request, jsonify, send_file, render_template
+from flask import Flask, request, jsonify, send_file
 from PyPDF2 import PdfReader, PdfWriter
 from flask_cors import CORS
 import io
@@ -24,8 +24,8 @@ def parse_pages(page_str, total_pages):
     return sorted([p - 1 for p in pages if 0 <= p - 1 < total_pages])
 
 @app.route('/')
-def home():
-    return render_template('index.html')
+def index():
+    return "PDF Toolkit Backend is running."
 
 @app.route('/organize', methods=['POST'])
 def organize_pdf():
@@ -280,6 +280,4 @@ def protect_pdf():
         return jsonify({'error': str(e)}), 500
 
 if __name__ == '__main__':
-
     app.run(debug=True)
-
